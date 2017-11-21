@@ -218,16 +218,8 @@ def reinforcement_training(model,
 
 
 
-
-
-
-
 model = QNetwork(learning_rate=0.01, 
                 num_functions=4,
                 hidden_size=10,
                 name="model")
-
-
-
-
 

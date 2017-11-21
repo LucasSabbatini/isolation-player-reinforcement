@@ -51,11 +51,11 @@ def evaluate(game, player, max_actions=8):
     """
     Returns the cross product of weights and evaluation values
     """
-    eval_vec = np.zeros((num_functions))
+    eval_vec = np.zeros((player.eval_functions))
     eval_vec[0] = actionMobility(game, player, max_actions)
     eval_vec[1] = my_moves_op(game, player)
     eval_vec[2] = my_moves_2_op(game, player)
-    eval_evc[3] = distance_from_center(game, player)
+    eval_vec[3] = distance_from_center(game, player)
     eval_vec[4] = actionFocus(game, player, max_actions)
     return eval_vec
 
@@ -99,7 +99,7 @@ def my_moves_2_op(game, player):
     """
     return (len(game.get_legal_moves(player))-2*len(game.get_legal_moves(game.get_opponent(player))))
 
-def distance_from_center(gamme, player):
+def distance_from_center(game, player):
     """
     Parameters
     ----------
@@ -110,9 +110,9 @@ def distance_from_center(gamme, player):
     distance from center / max_dist
     """
     max_dist = np.sqrt(2*((game.height//2)**2))
-    center = height//2
+    center = game.height//2
     current_position = game.get_player_location(player)
-    distance = np.sqrt((abs(current_position[0]-center)**2)+(abs(current_possition[1]-center))**2)
+    distance = np.sqrt((abs(current_position[0]-center)**2)+(abs(current_position[1]-center))**2)
     return distance * 100.0/max_dist
 
 def actionFocus(game, player, max_actions=8):
@@ -150,6 +150,13 @@ def custom_score(game, player, model):
         val = sess.run(model.logits, feed_dict={model.inputs_:state_features})
 
     return val, state_features
+
+def custom_score_test(game,player):
+    """
+    helper function for sample_test
+    """
+    return sum(evaluate(game, player))
+
 
 
 class IsolationPlayer:

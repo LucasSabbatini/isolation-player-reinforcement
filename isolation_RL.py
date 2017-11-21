@@ -1,5 +1,6 @@
 """
-REFERENCE: THIS CODE WAS ENTIRELY WRITTEN BY UDACITY'S STAFF
+REFERENCE: THIS SCRIPT WAS SUPPLIED BY UDACITY FOR THE ADVERSARIAL
+GAME-PLAYING AGENT
 
 This file contains the `Board` class, which implements the rules for the
 game Isolation as described in lecture, modified so that the players move
