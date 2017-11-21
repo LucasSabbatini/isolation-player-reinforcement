@@ -1,4 +1,6 @@
 """
+REFERENCE: THIS CODE WAS ENTIRELY WRITTEN BY UDACITY'S STAFF
+
 This file contains the `Board` class, which implements the rules for the
 game Isolation as described in lecture, modified so that the players move
 like knights in chess rather than queens.

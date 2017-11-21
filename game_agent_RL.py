@@ -1,10 +1,47 @@
-"""Finish all TODO items in this file to complete the isolation project, then
-test your agent's strength against a set of known agents using tournament.py
-and include the results in your report.
+"""
+This script contains the following functions and classes:
+
+Functions
+---------
+evaluate : returns a vector with state features, which are the individual values of each heuritic function
+actionMobility : heuristic
+my_moves_op : heuristic
+my_moves_2_op : heuristic
+distance from center : heuristic
+actionFocus : heuristic
+custom_score : actual evaluation function that will be called from the game-playing agent
+
+
+Notes: 
+- In the custom_score function there's a computation involving the neural network, and this
+script is not importing tensorflow: CHECK IF NECESSARY
+- The max_actions value is set to 8 because there are at most 8 actions a knigth can make
+-
+
+References:
+    This scirpt was built on top of the game_agent.py file from Udacity's Game-Playing
+Project, but the following functions were implemented by myself, with knowledge gathered
+from classes, textbook and online posts and forums:
+    evaluate
+    actionMoility
+    my_moves_op
+    my_moves_2_op
+    distance_from_ccenter
+    action_focus
+    custom_score
+    AlphaBetaPlayer.get_move
+    AlphaBetaPlayer.alphabeta
+    AlphaBetaPlayer.max_alpha_beta
+    AlphaBetaPlayer.min_alpha_beta
+    MinimaxPlayer.get_move
+    MinimaxPlayer.minimax
+    MinimaxPlayer.min_value
+    MinimaxPlayer.max_value
+
 """
 import random
 import numpy as np
-from isolation_nn import *
+# from isolation_nn import *
 
 class SearchTimeout(Exception):
     """Subclass base exception for code clarity. """
@@ -24,25 +61,53 @@ def evaluate(game, player, max_actions=8):
 
 def actionMobility(game, player, max_actions=8):
     """
-    Returns number of possible moves
+    Parameters
+    ----------
+    game : isolation_RL.Board
+    player : player object
+    max_acitons : int
+
+    Reutrns
+    -------
+    number of possible moves/max_actions
     """
     return (len(game.get_legal_moves(player))*100.0/float(max_actions))
 
 def my_moves_op(game, player):
     """
-    Returns (#my_moves-#op_moves)
+    Parameters
+    ----------
+    game : isolation_RL.Baord
+    player : player object
+
+    Returns
+    -------
+    #my_moves-#op_moves
     """
     return (len(game.get_legal_moves(player))-len(game.get_legal_moves(game.get_opponent(player))))
 
 def my_moves_2_op(game, player):
     """
-    Returns (#my_moves-2*#op_moves)/
+    Parameters
+    ----------
+    game : isolation_RL.Baord
+    player : player object
+    
+    Returns
+    -------
+    #my_moves-2*#op_moves
     """
     return (len(game.get_legal_moves(player))-2*len(game.get_legal_moves(game.get_opponent(player))))
 
 def distance_from_center(gamme, player):
     """
-    Returns distance from center / max_dist
+    Parameters
+    ----------
+    game : isolation_RL.Baord
+    player : player object
+    Returns 
+    -------
+    distance from center / max_dist
     """
     max_dist = np.sqrt(2*((game.height//2)**2))
     center = height//2
@@ -50,29 +115,26 @@ def distance_from_center(gamme, player):
     distance = np.sqrt((abs(current_position[0]-center)**2)+(abs(current_possition[1]-center))**2)
     return distance * 100.0/max_dist
 
-def action_focus(game, player, max_actions=8):
+def actionFocus(game, player, max_actions=8):
+
     """
 
     """
     return 100.0-actionMobility(game, player, max_actions)
 
 
-def get_eval_vec(game, play):
-    """
-    Returns the cross product of weights and evaluation values
-    """
-    eval_vec = np.zeros((num_functions))
-    eval_vec[0] = actionMobility(game, player, max_actions)
-    eval_vec[1] = my_moves_op(game, player)
-    eval_vec[2] = my_moves_2_op(game, player)
-    eval_vec[3] = distance_from_center(game, player)
-    eval_vec[4] = actionFocus(game, player, max_actions)
-    return eval_vec 
-
-
 
 def custom_score(game, player, model):
     """
+    Evaluate current state on player's view, using the evaluate function to obtain 
+    state features and a neural network forward pass to get the associated value
+
+    Parameters
+    ----------
+    game : isolation_RL.Board
+    player : player that the state should be evaluated for
+    model : isolation_nn.Network
+
     Returns
     -------
     valuation : tuple (value, game_features)
@@ -88,8 +150,6 @@ def custom_score(game, player, model):
         val = sess.run(model.logits, feed_dict={model.inputs_:state_features})
 
     return val, state_features
-
-
 
 
 class IsolationPlayer:
@@ -113,6 +173,8 @@ class IsolationPlayer:
         Time remaining (in milliseconds) when search is aborted. Should be a
         positive value large enough to allow the function to return before the
         timer expires.
+
+    eval_functions : 
     """
     def __init__(self, search_depth=3, score_fn=custom_score, timeout=10., eval_functions=5):
         self.search_depth = search_depth
@@ -131,6 +193,19 @@ class AlphaBetaPlayer(IsolationPlayer):
 
     def get_move(self, game, time_left, model):
         """
+        Search for the best move given the evaluation method before the time limit expires
+
+        Parameters
+        ----------
+        game : isolation_RL.Board
+        time_left : function that evaluates remainder time for ply
+        model : isolation_nn.Network
+
+        Returns
+        -------
+        best_move : (int, int), chosen move
+        val : float, value associated with leaf state of chosen path
+        state_features : np.array with values of each heuristic evaluated on leaf state
         """
 
         self.time_left = time_left
@@ -150,6 +225,21 @@ class AlphaBetaPlayer(IsolationPlayer):
 
     def alphabeta(self, game, depth, model, alpha=float("-inf"), beta=float("inf")):
         """
+        Performs the alphabeta search, calling min/max_alpha_beta recursively
+        
+        Parameters
+        ----------
+        game : isolation_RL.Board
+        depth : int, maximum depth the game should search
+        model : isolation_nn.Board
+        alpha : float
+        beta : flaot
+
+        Returns
+        -------
+        best_move : (int, int), chosen move
+        val : float, value associated with leaf state of chosen path
+        state_features : np.array with values of each heuristic evaluated on leaf state
         """
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
@@ -176,22 +266,24 @@ class AlphaBetaPlayer(IsolationPlayer):
             pass
 
     def min_alpha_beta(self, game, depth, alpha, beta, model):
-        """Min player in the alpha beta search
+        """
+        Min player in the alpha beta search
 
         Parameter
         ---------
-        game :
-        depth :
-        alpha : 
+        game : isolation_RL.Board
+        depth : int, remaining depth
+        alpha : float
             Since this is a min level, alpha represents the minimum value that can be found
             in this branch, because it is the lower bound of the parent of this node (it 
             will not choose a node with a value lower than alpha)
-        beta :
+        beta : float
 
         Returns
         -------
-        v, state_features : int
-            minimum evaluation found in its children
+        best_move : (int, int), chosen move
+        val : float, value associated with leaf state of chosen path
+        state_features : np.array with values of each heuristic evaluated on leaf state
         """
 
         if self.time_left() < self.TIMER_THRESHOLD:
@@ -218,13 +310,14 @@ class AlphaBetaPlayer(IsolationPlayer):
         return v, state_features
 
     def max_alpha_beta(self, game, depth, alpha, beta, model):
-        """Max player in the alpha beta search
+        """
+        Max player in the alpha beta search
 
         Parameter
         ---------
-        game : isolation.Board
-        depth : int
-        alpha : int
+        game : isolation_RL.Board
+        depth : int, remaining depth
+        alpha : float
         beta : int
             Since this is a max level, beta represents the maximum value that can be found
             in this branch, because it is the upper bound of the parent of this node (it
@@ -269,15 +362,8 @@ class MinimaxPlayer(IsolationPlayer):
     """
 
     def get_move(self, game, time_left):
-        """Search for the best move from the available legal moves and return a
-        result before the time limit expires.
-
-        **************  YOU DO NOT NEED TO MODIFY THIS FUNCTION  *************
-
-        For fixed-depth search, this function simply wraps the call to the
-        minimax method, but this method provides a common interface for all
-        Isolation agents, and you will replace it in the AlphaBetaPlayer with
-        iterative deepening search.
+        """
+        Search for the best move given the evaluation method before the time limit expires
 
         Parameters
         ----------
@@ -295,6 +381,7 @@ class MinimaxPlayer(IsolationPlayer):
         (int, int)
             Board coordinates corresponding to a legal move; may return
             (-1, -1) if there are no available legal moves.
+
         """
         self.time_left = time_left
 
@@ -314,16 +401,7 @@ class MinimaxPlayer(IsolationPlayer):
         return best_move
 
     def minimax(self, game, depth):
-        """Implement depth-limited minimax search algorithm as described in
-        the lectures.
-
-        This should be a modified version of MINIMAX-DECISION in the AIMA text.
-        https://github.com/aimacode/aima-pseudocode/blob/master/md/Minimax-Decision.md
-
-        **********************************************************************
-            You MAY add additional methods to this class, or define helper
-                 functions to implement the required functionality.
-        **********************************************************************
+        """
 
         Parameters
         ----------
@@ -341,16 +419,6 @@ class MinimaxPlayer(IsolationPlayer):
             The board coordinates of the best move found in the current search;
             (-1, -1) if there are no legal moves
 
-        Notes
-        -----
-            (1) You MUST use the `self.score()` method for board evaluation
-                to pass the project tests; you cannot call any other evaluation
-                function directly.
-
-            (2) If you use any helper functions (e.g., as shown in the AIMA
-                pseudocode) then you must copy the timer check into the top of
-                each helper function or else your agent will timeout during
-                testing.
         """
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
@@ -368,7 +436,8 @@ class MinimaxPlayer(IsolationPlayer):
             pass
 
     def max_value(self, game, depth):
-        """Max player in the minimax method. Look for the following move
+        """
+        Max player in the minimax method. Look for the following move
         that will maximize the expected evaluation
 
         Parameters
@@ -426,7 +495,5 @@ class MinimaxPlayer(IsolationPlayer):
         for action in game.get_legal_moves():
             v = min(v, self.max_value(game.forecast_move(action), depth-1))
         return v
-
-
 
 
